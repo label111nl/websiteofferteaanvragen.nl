@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { LeadPaymentModal } from '@/components/dashboard/LeadPaymentModal';
 import { useUser } from '@/hooks/useUser';
+import Loader from '@/components/ui/loader';
 
 interface LeadDetailsProps {
   lead: Lead;
@@ -184,9 +185,7 @@ export default function LeadDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <Loader />
     );
   }
 

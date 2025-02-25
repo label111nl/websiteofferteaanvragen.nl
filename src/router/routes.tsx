@@ -27,6 +27,9 @@ import MarketerDashboardLayout from "@/components/dashboard/MarketerDashboardLay
 import StandaloneQuotePage from "@/pages/StandaloneQuotePage";
 import MarketerDashboard from "@/pages/MarketerDashboard";
 import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
+import AIConfigurationPage from "@/pages/admin/settings/AIConfigurationPage";
+import LeadMatchingPage from "@/pages/admin/settings/LeadMatchingPage";
+import AuditLogsPage from "@/pages/admin/settings/AuditLogsPage";
 
 // Root route
 export const rootRoute = createRootRoute({
@@ -62,44 +65,53 @@ export const forgotPasswordRoute = createRoute({
 export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin",
-  component: AdminDashboardLayout,
+  component: AdminDashboardLayout,   
+  validateSearch: (search: Record<string, unknown>) => ({
+    status: (search.status) as "pending" | "published",
+  }),
+});
+
+export const adminLeadsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: "/leads",
+  component: AdminDashboardLayout, // Reuse the same component for url /admin/leads=
 });
 
 export const adminLoginRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: "/login",
+  getParentRoute: () => rootRoute,
+  path: "admin/login",
   component: AdminLogin,
 });
 
 export const adminSettingsRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: "settings",
+  getParentRoute: () => rootRoute,
+  path: "admin/settings",
   component: SettingsPage,
 });
 
 // Export the new admin settings routes
 export const adminSettingsLeadMatchingRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: 'settings/lead-matching',
-  component: AdminSettingsPage,
+  getParentRoute: () => rootRoute,
+  path: 'admin/settings/lead-matching',
+  component: LeadMatchingPage,
 });
 
 export const adminSettingsAIRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: 'settings/ai',
-  component: AdminSettingsPage,
+  getParentRoute: () => rootRoute,
+  path: 'admin/settings/ai',
+  component: AIConfigurationPage,
 });
 
 export const adminSettingsPlatformRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: 'settings/platform',
-  component: AdminSettingsPage,
+  getParentRoute: () => rootRoute,
+  path: 'admin/settings/platform',
+  component: AuditLogsPage,
 });
 
 // Add admin lead details route
 export const adminLeadDetailsRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: "leads/$id",
+  getParentRoute: () => rootRoute,
+  path: "admin/leads/$id",
   component: lazy(() => import("@/pages/LeadDetailsPage")),
 });
 
@@ -265,13 +277,14 @@ export const routeTree = rootRoute.addChildren([
   verifyEmailRoute,
   resetPasswordRoute,
   adminRoute.addChildren([
-    adminLoginRoute, 
-    adminSettingsRoute,
-    adminLeadDetailsRoute,
-    adminSettingsLeadMatchingRoute,
-    adminSettingsAIRoute,
-    adminSettingsPlatformRoute,
+    adminLeadsRoute 
   ]),
+  adminLoginRoute, 
+  adminSettingsRoute,
+  adminLeadDetailsRoute,
+  adminSettingsLeadMatchingRoute,
+  adminSettingsAIRoute,
+  adminSettingsPlatformRoute,
   dashboardRoute.addChildren([
     marketerIndexRoute,
     marketerLeads,

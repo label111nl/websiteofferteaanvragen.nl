@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Users,
@@ -31,6 +31,7 @@ import { CreditSystem } from "./CreditSystem";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui";
+import { set } from "date-fns";
 
 interface AdminDashboardLayoutProps {
   children: React.ReactNode;
@@ -59,7 +60,8 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
       conversionRate: 0,
   });
   const [loadingStats, setLoadingStats] = useState(true);
- 
+  const search = useSearch({ from: '/admin' });
+
   const navigation = [
     {
       name: 'Overview',
@@ -200,14 +202,12 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
 
   useEffect(() => {
     const filterLeads = () => {
-      if (location.search) {
-        const tab = new URLSearchParams(location.search).get("tab");
-        if (tab === "pending") {
+      if (search) {
+        const status = search.status;
+        if (status === "pending") {
           setFilteredLeads(leads.filter((lead) => lead.status === "pending"));
-        } else if (tab === "approved") {
-          setFilteredLeads(leads.filter((lead) => lead.status === "approved"));
-        } else if (tab === "rejected") {
-          setFilteredLeads(leads.filter((lead) => lead.status === "rejected"));
+        } else if (status === "published") {
+          setFilteredLeads(leads.filter((lead) => lead.published === true));
         } else {
           setFilteredLeads(leads);
         }
@@ -215,20 +215,19 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
     };
 
     filterLeads();
-  }, [location]);
+  }, [location,search]);
 
    const fetchDashboardData = async () => {
      if (!user) return;
      setLoadingStats(true);
      try {
        // Fetch user's credits
-        const { data: credits, error: userError } = await supabase
-         .from("users")
-         .select("credits")
-         .eq("id", user.id)
-         .single(); // Use .single() to get a single record
+      const { data: credits, error: userError } = await supabase
+         .from("users")
+         .select("credits")
+         .eq("id", user.id)
+         .single(); // Use .single() to get a single record
     
-         console.log(credits, "PURCHASES")
        if (userError) throw userError;
        
        // Fetch lead purchases
@@ -247,6 +246,7 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
          .order('created_at', { ascending: false });
  
        if (quotesError) throw quotesError;
+ 
  
  
       //  Calculate stats
@@ -275,8 +275,6 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
       fetchDashboardData();
     }
   }, [user, leads]);
-
-   console.log(stats, "HERE")
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -474,57 +472,6 @@ export default function AdminDashboardLayout({ children }: AdminDashboardLayoutP
         {/* <main className="p-6"> */}
           {user ? 
             <main className="p-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <CreditSystem credits={credits} loading={loadingStats}/>
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Totaal Leads</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{loadingStats ?  
-                            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
-                             : stats.totalLeads}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {stats.totalSpent} credits uitgegeven
-                        </p>
-                      </CardContent>
-                    </Card>
-            
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Conversie</CardTitle>
-                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">
-                        {loadingStats ?  
-                            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
-                             : stats.conversionRate.toFixed(2) + "%"}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Van leads naar klanten
-                        </p>
-                      </CardContent>
-                    </Card>
-            
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">ROI</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{loadingStats ?  
-                            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
-                             : '€' +(stats.totalSpent * 75).toFixed(2)}</div>
-                        <p className="text-xs text-muted-foreground">
-                          Geschatte waarde
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-    
             <div className="bg-white rounded-lg shadow mt-[15px]">
               <div className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Recent Leads</h2>
