@@ -42,21 +42,20 @@ serve(async (req) => {
 
     // Get the package details from the request
     const { packageId } = await req.json()
-
     // Get package details from database
     const { data: packageData, error: packageError } = await supabaseClient
       .from('credit_packages')
       .select('*')
-      .eq('id', packageId)
+      .eq('name', packageId)
       .single()
-
+     
     if (packageError || !packageData) {
-      throw new Error('Package not found')
+      throw new Error(`Package not found`)
     }
 
     // Create Stripe session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['ideal', 'card'],
+      payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
@@ -80,6 +79,23 @@ serve(async (req) => {
         credits: packageData.credits,
       },
     })
+
+    await supabaseClient.from("credit_transactions").insert({
+      user_id: user.id,
+      amount: packageData.credits,
+      stripe_session_id: session.id, // Store Stripe session ID for tracking
+      type: "purchase",
+      status: "pending", // Mark as pending until payment is confirmed
+    })
+
+    await supabaseClient.from("credit_transactions").insert({
+      user_id: user.id,
+      amount: packageData.credits,
+      stripe_session_id: session.id, // Store Stripe session ID for tracking
+      type: "purchase",
+      status: "pending", // Mark as pending until payment is confirmed
+    })
+    
 
     return new Response(
       JSON.stringify({ sessionId: session.id, url: session.url }),

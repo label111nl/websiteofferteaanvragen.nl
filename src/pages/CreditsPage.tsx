@@ -7,9 +7,9 @@ import toast from 'react-hot-toast';
 import { supabase } from '@/lib/supabase';
 
 const CREDIT_PACKAGES = [
-  { id: 'credit-5', credits: 10, price: 50, popular: false },
-  { id: 'credit-20', credits: 25, price: 100, popular: true },
-  { id: 'credit-50', credits: 50, price: 175, popular: false },
+  { id: 'small', credits: 10, price: 50, popular: false },
+  { id: 'medium', credits: 25, price: 100, popular: true },
+  { id: 'large', credits: 50, price: 175, popular: false },
 ] 
 
 export default function CreditsPage() {
@@ -24,10 +24,10 @@ export default function CreditsPage() {
       let { data: session, error: sessionError } = await supabase.functions.invoke(
         'create-checkout-session',
         {
-          body: { packageId },
+          body: JSON.stringify({ packageId: packageId }),
         }
       );
-      
+      console.log(sessionError, "THIRD")
       if (sessionError) throw sessionError
 
       // Record transaction
@@ -45,7 +45,7 @@ export default function CreditsPage() {
       if (transactionError) throw transactionError
        console.log(session, "FIRST")
       // Redirect to Stripe
-      // window.location.href = session.url
+      window.location.href = session.url
     } catch (error) {
       toast.error('Error initiating purchase');
     } finally {
