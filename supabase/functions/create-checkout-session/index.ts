@@ -87,14 +87,6 @@ serve(async (req) => {
       type: "purchase",
       status: "pending", // Mark as pending until payment is confirmed
     })
-
-    await supabaseClient.from("credit_transactions").insert({
-      user_id: user.id,
-      amount: packageData.credits,
-      stripe_session_id: session.id, // Store Stripe session ID for tracking
-      type: "purchase",
-      status: "pending", // Mark as pending until payment is confirmed
-    })
     
 
     return new Response(
